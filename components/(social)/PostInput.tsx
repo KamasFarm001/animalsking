@@ -14,7 +14,7 @@ const PostInput = ({
 }: {
 	onSubmit: (data: postDataType) => void;
 	editorRef: MutableRefObject<HTMLDivElement | null>;
-	disabled: boolean;
+	disabled?: boolean;
 	form: UseFormReturn<
 		{
 			postText: string;
