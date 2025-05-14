@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  email              String      @unique
+  emailVerified      Boolean?
+  image              String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  accountType        AccountType @default(PERSONAL)
+  bio                String?
+  country            String
+  displayUsername    String?     @unique
+  hasVerifiedAccount Boolean     @default(false)
+  isAnonymous        Boolean?
+  phone              String?
+  id                 String      @id @unique
+  name               String?
+  account            account[]
+  businesses         business[]  @relation("OwnerBusinesses")
+  comments           comment[]   @relation("UserComments")
+  following          follower[]  @relation("UserFollows")
+  followers          follower[]  @relation("UserFollowedBy")
+  posts              post[]      @relation("UserPosts")
+  session            session[]
+}
+
+model business {
+  id                 Int              @id @default(autoincrement())
+  businessName       String
+  phone              String
+  accountType        AccountType      @default(BUSINESS)
+  country            String
+  location           String?
+  businessType       ProductCategory?
+  ownerEmail         String?
+  hasVerifiedAccount Boolean          @default(false)
+  ownerId            String?
+  yearsInOperation   Int?
+  servicesOffered    String[]
+  website            String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  owner              user?            @relation("OwnerBusinesses", fields: [ownerId], references: [id])
+  following          follower[]       @relation("BusinessFollows")
+  followers          follower[]       @relation("BusinessFollowedBy")
+  products           product[]
+}
+
+model account {
+  id                    String    @id @default(uuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model session {
+  id        String   @id(map: "Session_pkey") @default(uuid())
+  userId    String
+  token     String   @unique(map: "Session_token_key")
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Session_userId_fkey")
+
+  @@index([token], map: "Session_token_idx")
+  @@index([userId], map: "Session_userId_idx")
+}
+
+model product {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  quantity    Int
+  imageUrl    String?
+  businessId  Int
+  category    ProductCategory @default(OTHER)
+  organic     Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  business    business        @relation(fields: [businessId], references: [id])
+}
+
+model post {
+  id        Int       @id @default(autoincrement())
+  message   String
+  imageUrl  String?
+  videoUrl  String?
+  likes     Int       @default(0)
+  edited    Boolean   @default(false)
+  shares    Int       @default(0)
+  reposts   Int       @default(0)
+  updated   Boolean   @default(false)
+  authorId  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  comments  comment[] @relation("PostComments")
+  author    user      @relation("UserPosts", fields: [authorId], references: [id])
+}
+
+model comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  postId    Int
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    user     @relation("UserComments", fields: [authorId], references: [id])
+  post      post     @relation("PostComments", fields: [postId], references: [id])
+}
+
+model follower {
+  id                  Int       @id @default(autoincrement())
+  followerUserId      String?
+  followerBusinessId  Int?
+  followingUserId     String?
+  followingBusinessId Int?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  followerBusiness    business? @relation("BusinessFollows", fields: [followerBusinessId], references: [id])
+  followerUser        user?     @relation("UserFollows", fields: [followerUserId], references: [id])
+  followingBusiness   business? @relation("BusinessFollowedBy", fields: [followingBusinessId], references: [id])
+  followingUser       user?     @relation("UserFollowedBy", fields: [followingUserId], references: [id])
+
+  @@unique([followerUserId, followingUserId])
+  @@unique([followerUserId, followingBusinessId])
+  @@unique([followerBusinessId, followingUserId])
+  @@unique([followerBusinessId, followingBusinessId])
+}
+
+enum AccountType {
+  PERSONAL
+  BUSINESS
+}
+
+enum ProductCategory {
+  CROPS
+  LIVESTOCK
+  DAIRY
+  EQUIPMENT
+  SEEDS
+  FERTILIZER
+  PESTICIDE
+  ORGANIC
+  TOOLS
+  OTHER
+}

@@ -1,0 +1,7 @@
+
+{"chainId":1337,"type":"DEPLOYMENT_INITIALIZE"}
+{"artifactId":"RaffleModuleBuilder#Raffle","constructorArgs":[],"contractName":"Raffle","dependencies":[],"from":"0x36dc040431e8cba953147ec1d929354a74bf1a6e","futureId":"RaffleModuleBuilder#Raffle","futureType":"NAMED_ARTIFACT_CONTRACT_DEPLOYMENT","libraries":{},"strategy":"basic","strategyConfig":{},"type":"DEPLOYMENT_EXECUTION_STATE_INITIALIZE","value":{"_kind":"bigint","value":"0"}}
+{"futureId":"RaffleModuleBuilder#Raffle","networkInteraction":{"data":"0x","id":1,"type":"ONCHAIN_INTERACTION","value":{"_kind":"bigint","value":"0"}},"type":"NETWORK_INTERACTION_REQUEST"}
+{"futureId":"RaffleModuleBuilder#Raffle","networkInteractionId":1,"nonce":0,"transaction":{"fees":{"maxFeePerGas":{"_kind":"bigint","value":"3000000000"},"maxPriorityFeePerGas":{"_kind":"bigint","value":"1000000000"}},"hash":"0x1204c3204811605d4a018089956208ed60a638340f76b9646f7f197a67a10bdb"},"type":"TRANSACTION_SEND"}
+{"futureId":"RaffleModuleBuilder#Raffle","hash":"0x1204c3204811605d4a018089956208ed60a638340f76b9646f7f197a67a10bdb","networkInteractionId":1,"receipt":{"blockHash":"0xdae36ffcb49b38cfdecda6aa88d3481964fd863b35a7f03cd3a9edfb833ac664","blockNumber":1,"contractAddress":"0xacAE06D35118A5715C851693179E697343394B6a","logs":[],"status":"SUCCESS"},"type":"TRANSACTION_CONFIRM"}
+{"futureId":"RaffleModuleBuilder#Raffle","result":{"address":"0xacAE06D35118A5715C851693179E697343394B6a","type":"SUCCESS"},"type":"DEPLOYMENT_EXECUTION_STATE_COMPLETE"}
