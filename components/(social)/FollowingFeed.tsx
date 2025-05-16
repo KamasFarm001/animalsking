@@ -7,11 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { IPost, IPostPage } from "@/interface/social";
 import apiConfig from "@/utils/axiosConfig";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
 
 const FollowingFeed = () => {
-	const session = useSession();
-	const userId = session.data?.user.id;
+	// const session = useSession();
+	const userId = "";
 	const {
 		status,
 		data,

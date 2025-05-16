@@ -28,7 +28,6 @@ import {
 } from "../ui/dropdown-menu";
 
 import { useTheme } from "next-themes";
-import { useSession } from "next-auth/react";
 import { generateAbbr } from "@/utils/utils";
 import { Input } from "../ui/input";
 import Link from "next/link";
@@ -37,7 +36,7 @@ import { useContext, useEffect } from "react";
 import { GlobalContextProvider } from "@/contexts/GlobalContext";
 
 const SocialHeader = () => {
-	const session = useSession();
+	// const session = useSession();
 	const { setTheme, theme } = useTheme();
 	const router = useRouter();
 
@@ -86,11 +85,11 @@ const SocialHeader = () => {
 						/>
 					</div>
 					<ul className="flex items-center gap-4">
-						{session.data?.user && (
+						{/* {session.data?.user && (
 							<li>
 								<Link href={"/dashboard"}>Dashboard</Link>
 							</li>
-						)}
+						)} */}
 						<li>
 							<DropdownMenu modal={false}>
 								<DropdownMenuTrigger asChild className="cursor-pointer">
@@ -103,31 +102,31 @@ const SocialHeader = () => {
 													className="border shadow-sm dark:shadow-none shadow-shadow-color cursor-pointer"
 												/>
 												<AvatarFallback className="text-sm border shadow-sm dark:shadow-none shadow-shadow-color cursor-pointer">
-													{generateAbbr(session?.data?.user.username || "AK")}
+													{/* {generateAbbr(session?.data?.user.username || "AK")} */}
 												</AvatarFallback>
 											</Avatar>
 										</div>
-										<div className="hidden md:flex flex-col">
+										{/* <div className="hidden md:flex flex-col">
 											<h3 className="line-clamp-1 break-all scroll-m-20 text-md font-semibold tracking-tight first:mt-0">
 												{session?.data?.user?.username}
 											</h3>
 											<small className="text-sm text-left line-clamp-1 break-all font-normal text-muted-foreground leading-none">
 												@{session?.data?.user.displayName || "iamFarmer"}
 											</small>
-										</div>
+										</div> */}
 										<ChevronDown className="size-5" />
 									</div>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent className="w-56 relative right-5">
 									<DropdownMenuGroup>
-										{session.data?.user && (
+										{/* {session.data?.user && (
 											<Link href={`/users/${session.data?.user.id}`}>
 												<DropdownMenuItem className="cursor-pointer">
 													<User className="mr-2 h-4 w-4" />
 													<span>Profile</span>
 												</DropdownMenuItem>
 											</Link>
-										)}
+										)} */}
 
 										<Link href={`/settings`}>
 											<DropdownMenuItem className="cursor-pointer">
@@ -184,7 +183,7 @@ const SocialHeader = () => {
 									</DropdownMenuGroup>
 									<DropdownMenuSeparator />
 
-									{session.data?.user ? (
+									{/* {session.data?.user ? (
 										<DropdownMenuItem
 											className="cursor-pointer"
 											// onClick={() => setIsLogoutModal(true)}
@@ -201,7 +200,7 @@ const SocialHeader = () => {
 											<LogIn className="mr-2 h-4 w-4" />
 											<span>Log in</span>
 										</DropdownMenuItem>
-									)}
+									)} */}
 								</DropdownMenuContent>
 							</DropdownMenu>
 						</li>

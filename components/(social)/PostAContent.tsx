@@ -12,7 +12,6 @@ import { postSchema } from "@/lib/zodSchema";
 import { z } from "zod";
 import { CircularLoader } from "../Loader";
 import { AddToSelectionRange, cn, generateAbbr } from "@/utils/utils";
-import { useSession } from "next-auth/react";
 import { useSubmitPostMutation } from "@/hooks/useMutation";
 import { useEffect, useRef, useState } from "react";
 import PostInput from "./PostInput";
@@ -34,7 +33,7 @@ export interface IEmoji {
 export type postDataType = z.infer<typeof postSchema>;
 
 const PostAContent = () => {
-	const session = useSession();
+	// const session = useSession();
 	const form = useForm<postDataType>({
 		resolver: zodResolver(postSchema),
 		defaultValues: {
@@ -52,25 +51,25 @@ const PostAContent = () => {
 		useState(false);
 	const { theme } = useTheme();
 
-	const onSubmit = async (data: postDataType) => {
-		if (!session || !session.data?.user) {
-			setShowUnauthorizedModal(true);
-		} else {
-			const formData = new FormData();
-			if (data.postText) {
-				formData.append("postText", data.postText);
-				mutation.mutate(formData, {
-					onSuccess: () => {
-						form.reset();
-						if (editorRef.current) {
-							editorRef.current.innerHTML = "";
-						}
-					},
-				});
-			}
-			editorRef.current?.focus();
-		}
-	};
+	// const onSubmit = async (data: postDataType) => {
+	// 	if (!session || !session.data?.user) {
+	// 		setShowUnauthorizedModal(true);
+	// 	} else {
+	// 		const formData = new FormData();
+	// 		if (data.postText) {
+	// 			formData.append("postText", data.postText);
+	// 			mutation.mutate(formData, {
+	// 				onSuccess: () => {
+	// 					form.reset();
+	// 					if (editorRef.current) {
+	// 						editorRef.current.innerHTML = "";
+	// 					}
+	// 				},
+	// 			});
+	// 		}
+	// 		editorRef.current?.focus();
+	// 	}
+	// };
 
 	useEffect(() => {
 		editorRef.current?.focus();
@@ -116,24 +115,26 @@ const PostAContent = () => {
 		}
 	};
 
+	const onSubmit = () => {};
+
 	return (
 		<>
 			<Form {...form}>
 				<form
-					onSubmit={form.handleSubmit(onSubmit)}
+					// onSubmit={form.handleSubmit(onSubmit)}
 					className="dark:border shadow-sm dark:shadow-none shadow-shadow-color bg-card p-5 rounded-md"
 				>
 					<div className="flex gap-5 flex-col">
 						<div className="flex gap-4 items-center">
 							<Avatar className="size-14 mb-auto">
-								<AvatarImage
+								{/* <AvatarImage
 									src={session?.data?.user.avatarUrl}
 									alt={session?.data?.user?.username}
 									className="border shadow-sm dark:shadow-none shadow-shadow-color cursor-pointer"
 								/>
 								<AvatarFallback className="text-sm border shadow-sm dark:shadow-none shadow-shadow-color cursor-pointer">
 									{generateAbbr(session?.data?.user?.username || "AK")}
-								</AvatarFallback>
+								</AvatarFallback> */}
 							</Avatar>
 
 							<PostInput

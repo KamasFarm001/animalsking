@@ -2,7 +2,7 @@
 
 import { Loader } from "@/components/Loader";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { useCallback, useRef } from "react";
 
 import {
 	Form,
@@ -26,13 +26,12 @@ import {
 	InputOTPSeparator,
 	InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { oneTimeTokenSchema } from "@/lib/zodSchema";
+import { emailSchema, oneTimeTokenSchema } from "@/lib/zodSchema";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import RequestAnewCode from "@/components/RequestAnewCode";
 import { cn } from "@/utils/utils";
 import { verifyOneTimeToken } from "@/actions/authActions";
-import { useSession } from "next-auth/react";
 
 export type verificationToken = z.infer<typeof oneTimeTokenSchema>;
 
@@ -44,53 +43,61 @@ const Page = () => {
 			oneTimeToken: "",
 		},
 	});
-	const email = searchParams.get("email");
-	const token = searchParams.get("token");
+	const email = searchParams.get("email") as string;
+	const otp = searchParams.get("otp");
 
 	const router = useRouter();
 	const [countdown, setCountDown] = useState(0);
 
-	async function onSubmit(data: verificationToken) {
-		const formData = new FormData();
-		formData.append("otp", data.oneTimeToken);
-		const rawState = await verifyOneTimeToken(formData);
-		const state = JSON.parse(rawState);
+	const onSubmit = useCallback(
+		async (data: verificationToken) => {
+			const formData = new FormData();
+			formData.append("otp", data.oneTimeToken);
+			formData.append("email", email);
+			const rawState = await verifyOneTimeToken(formData);
+			const state = JSON.parse(rawState);
 
-		if (form.formState.isSubmitting) {
-			toast({
-				variant: "default",
-				title: "Verifying Your Token...",
-				description: (
-					<p className="text-foreground text-md flex items-center gap-4">
-						<span>Please wait while we confirm your token.</span>{" "}
-						<Loader className="w-5 h-5" />
-					</p>
-				),
-			});
-		}
+			if (form.formState.isSubmitting) {
+				toast({
+					variant: "default",
+					title: "Verifying Your Token...",
+					description: (
+						<p className="text-foreground text-md flex items-center gap-4">
+							<span>Please wait while we confirm your OTP.</span>{" "}
+							<Loader className="w-5 h-5" />
+						</p>
+					),
+				});
+			}
 
-		if (!state?.success) {
-			console.log(state);
-			setCountDown((prev) => prev + 15);
-
-			toast({
-				variant: "destructive",
-				title: state?.data.oneTimeToken?._errors[0] || state?.data,
-				description: "request a new verification code",
-			});
-		}
-
-		if (state?.success) {
-			setCountDown((prev) => prev + 10);
-			console.log(state);
-			//signin here
-			toast({
-				title: `Welcome ${state.data.user.username}`,
-				description: state.data.message,
-			});
-			router.push("/");
-		}
-	}
+			if (state?.success) {
+				setCountDown((prev) => prev + 15);
+				toast({
+					variant: "default",
+					title: state.data,
+				});
+				router.push("/");
+			} else {
+				switch (state.data.code) {
+					case "INVALID_OTP":
+						toast({
+							variant: "destructive",
+							title: "Error",
+							description: state.data.message,
+						});
+						break;
+					default:
+						toast({
+							variant: "destructive",
+							title: "Something went wrong",
+							description: state.data.message,
+						});
+						break;
+				}
+			}
+		},
+		[email, form.formState.isSubmitting, router]
+	);
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
@@ -101,17 +108,43 @@ const Page = () => {
 		};
 	}, [countdown]);
 
-	useEffect(() => {
-		if (!email) {
-			router.back();
+	const emailValidation = emailSchema.safeParse({ email });
+	if (!emailValidation.success) {
+		toast({
+			variant: "destructive",
+			title: "Invalid email",
+			description: emailValidation?.error.format().email?._errors[0],
+		});
+		router.push(`${process.env.NEXT_PUBLIC_WEBSITE_URL}/signup`);
+	}
+
+	// --- FIX: Only trigger OTP auto-submit once per unique OTP value ---
+	const otpTriggeredRef = useRef<string | null>(null);
+
+	const getOTPandSubmit = useCallback(async () => {
+		if (otp) {
+			form.setValue("oneTimeToken", otp, { shouldValidate: true });
+			await form.handleSubmit(onSubmit)();
 		}
-	}, [email, router]);
+	}, [form, onSubmit, otp]);
 
 	useEffect(() => {
-		if (token) {
-			form.setValue("oneTimeToken", token);
+		if (otp && otpTriggeredRef.current !== otp) {
+			otpTriggeredRef.current = otp;
+			getOTPandSubmit();
 		}
-	}, [form, token]);
+	}, [getOTPandSubmit, otp]);
+
+	useEffect(() => {
+		// Watch for changes to the form and auto-submit when complete
+		const subscription = form.watch(async (value, { name }) => {
+			if (name === "oneTimeToken" && value.oneTimeToken?.length === 6) {
+				await form.handleSubmit(onSubmit)();
+			}
+		});
+
+		return () => subscription.unsubscribe();
+	}, [form, onSubmit, otp]);
 
 	return (
 		<main className="relative bg-green-darker text-foreground h-screen grid place-content-center">
@@ -136,7 +169,7 @@ const Page = () => {
 												aria-required
 												className={cn(`h-12 w-12 border-gray-600`, {
 													"border-red-600":
-														form.formState.errors.oneTimeToken || email, //if an error exist an email will also exist
+														form.formState.errors.oneTimeToken || !email, //if an error exist an email will also exist
 												})}
 												index={0}
 											/>
@@ -145,7 +178,7 @@ const Page = () => {
 												aria-required
 												className={cn(`h-12 w-12 border-gray-600`, {
 													"border-red-600":
-														form.formState.errors.oneTimeToken || email, //if an error exist an email will also exist
+														form.formState.errors.oneTimeToken || !email, //if an error exist an ! will also exist
 												})}
 												index={1}
 											/>
@@ -154,7 +187,7 @@ const Page = () => {
 												aria-required
 												className={cn(`h-12 w-12 border-gray-600`, {
 													"border-red-600":
-														form.formState.errors.oneTimeToken || email, //if an error exist an email will also exist
+														form.formState.errors.oneTimeToken || !email, //if an error exist an email will also exist
 												})}
 												index={2}
 											/>
@@ -166,7 +199,7 @@ const Page = () => {
 												aria-required
 												className={cn(`h-12 w-12 border-gray-600`, {
 													"border-red-600":
-														form.formState.errors.oneTimeToken || email, //if an error exist an email will also exist
+														form.formState.errors.oneTimeToken || !email, //if an error exist an email will also exist
 												})}
 												index={3}
 											/>
@@ -175,7 +208,7 @@ const Page = () => {
 												aria-required
 												className={cn(`h-12 w-12 border-gray-600`, {
 													"border-red-600":
-														form.formState.errors.oneTimeToken || email, //if an error exist an email will also exist
+														form.formState.errors.oneTimeToken || !email, //if an error exist an email will also exist
 												})}
 												index={4}
 											/>
@@ -184,7 +217,7 @@ const Page = () => {
 												aria-required
 												className={cn(`h-12 w-12 border-gray-600`, {
 													"border-red-600":
-														form.formState.errors.oneTimeToken || email, //if an error exist an email will also exist
+														form.formState.errors.oneTimeToken || !email, //if an error exist an email will also exist
 												})}
 												index={5}
 											/>
@@ -210,6 +243,7 @@ const Page = () => {
 										countdown={countdown}
 										email={email}
 										setCountDown={setCountDown}
+										resetFields={() => form.resetField("oneTimeToken")}
 									/>
 								</FormDescription>
 								<FormMessage />

@@ -74,6 +74,15 @@ model account {
   @@index([userId])
 }
 
+model verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime
+  updatedAt  DateTime
+}
+
 model session {
   id        String   @id(map: "Session_pkey") @default(uuid())
   userId    String

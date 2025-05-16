@@ -30,6 +30,7 @@ const Page = () => {
 		resolver: zodResolver(signInSchema),
 		defaultValues: {
 			email: "",
+			password: "",
 		},
 	});
 
@@ -42,25 +43,35 @@ const Page = () => {
 		try {
 			const formData = new FormData();
 			formData.append("email", data.email);
+			formData.append("password", data.password);
 
 			const rawState = await signInUser(formData);
 			const state = JSON.parse(rawState);
 
 			if (!state?.success) {
-				console.log(state);
-				toast({
-					variant: "destructive",
-					title: state?.data.email?._errors[0] || state?.data,
-					description: "please fix the error and try again.",
-				});
+				if (state.data.code === "INVALID_EMAIL_OR_PASSWORD") {
+					toast({
+						variant: "destructive",
+						title: state.data.message,
+						description: "invalid email or password",
+					});
+				} else {
+					toast({
+						variant: "destructive",
+						title: state.data.message,
+						description: "please fix the error and try again.",
+					});
+				}
 			}
 
 			if (state?.success) {
 				console.log(state);
 				toast({
+					variant: "default",
+					title: state.data,
 					description: state?.data.message,
 				});
-				router.push(`/signin/user-verification?userId=${state?.data.userId}`);
+				router.push("/");
 			}
 		} catch (error) {
 			console.log(error);
@@ -101,6 +112,32 @@ const Page = () => {
 											{
 												"focus-visible:ring-red-600 dark:focus-visible:ring-red-600 focus-visible:border-red-600/30 dark:focus-visible:border-red-600/30 dark:border-red-600 border-red-600":
 													form.formState.errors.email,
+											}
+										)}
+										{...field}
+										required
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						control={form.control}
+						name="password"
+						render={({ field }) => (
+							<FormItem>
+								<FormControl>
+									<Input
+										disabled={form.formState.isSubmitting}
+										type="password"
+										placeholder="password"
+										className={cn(
+											"bg-transparent focus-visible:ring-0 dark:focus-visible:ring-2  dark:border-gray-500 focus-visible:ring-white dark:focus-visible:ring-ring dark:focus-visible:border-primary/30",
+
+											{
+												"focus-visible:ring-red-600 dark:focus-visible:ring-red-600 focus-visible:border-red-600/30 dark:focus-visible:border-red-600/30 dark:border-red-600 border-red-600":
+													form.formState.errors.password,
 											}
 										)}
 										{...field}

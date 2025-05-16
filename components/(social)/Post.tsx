@@ -32,7 +32,6 @@ import {
 import React, { useState } from "react";
 import { useDeletePostMutation } from "@/hooks/useMutation";
 import { CircularLoader } from "../Loader";
-import { useSession } from "next-auth/react";
 import UnauthorizedModal from "../UnauthorizedModal";
 import UpdatePost from "./UpdatePost";
 import Link from "next/link";
@@ -54,14 +53,12 @@ const Post = (post: IPost) => {
 	const [UnauthorizedModalIsLoading, setUnauthorizedModalIsLoading] =
 		useState(false);
 
-	const session = useSession();
-
 	return (
 		<>
 			<article className="group/post rounded-sm p-5 flex flex-col gap-2 shadow-sm dark:shadow-none shadow-shadow-color dark:border bg-card">
 				<div className="flex items-center gap-5 justify-between">
 					<div className=" mb-2 flex gap-2 items-center">
-						<UserTooltip user={post.author} sessionId={session.data?.user.id}>
+						<UserTooltip user={post.author} sessionId={""}>
 							<div className="flex gap-4 items-center  ">
 								<Avatar className="size-12">
 									<AvatarImage
@@ -81,10 +78,7 @@ const Post = (post: IPost) => {
 									href={`/users/${post.author?._id}`}
 									className="flex hover:underline items-center gap-2 scroll-m-20 text-md font-medium tracking-tight"
 								>
-									<UserTooltip
-										user={post.author}
-										sessionId={session.data?.user.id}
-									>
+									<UserTooltip user={post.author} sessionId={""}>
 										<h2>{post.author?.username}</h2>
 									</UserTooltip>
 
@@ -113,7 +107,7 @@ const Post = (post: IPost) => {
 							className={cn(
 								"relative -top-5 group-hover/post:opacity-100 opacity-0 transition-opacity",
 								{
-									hidden: post?.author?._id !== session?.data?.user.id,
+									// hidden: post?.author?._id !== session?.data?.user.id,
 								}
 							)}
 						>
@@ -131,7 +125,7 @@ const Post = (post: IPost) => {
 
 									<UpdatePost
 										setShowUnauthorizedModal={setShowUnauthorizedModal}
-										session={session}
+										session={"session"}
 										post={post}
 									/>
 								</DropdownMenuItem>
@@ -149,13 +143,13 @@ const Post = (post: IPost) => {
 
 									<Dialog modal>
 										<DialogTrigger
-											onClick={() => {
-												if (!session.data?.user) {
-													setShowUnauthorizedModal(true);
-												} else {
-													return;
-												}
-											}}
+											// onClick={() => {
+											// 	if (!session.data?.user) {
+											// 		setShowUnauthorizedModal(true);
+											// 	} else {
+											// 		return;
+											// 	}
+											// }}
 											asChild
 											className="text-destructive"
 										>
@@ -219,7 +213,7 @@ const Post = (post: IPost) => {
 
 					<PostAction
 						setShowUnauthorizedModal={setShowUnauthorizedModal}
-						session={session}
+						session={"session"}
 						postId={post._id}
 						likes={post.likes}
 						comments={post.comments}

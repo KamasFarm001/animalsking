@@ -2,12 +2,21 @@ import { string, z } from "zod";
 
 export const signInSchema = z.object({
 	email: z.string().email(),
+	password: z
+		.string({ required_error: "Password is required" })
+		.min(8, { message: "Password must be at least 8 characters long" }),
 });
 
 export const oneTimeTokenSchema = z.object({
 	oneTimeToken: z.string().min(6, {
 		message: "Your one-time code must be 6 characters.",
 	}),
+});
+
+export const emailSchema = z.object({
+	email: z
+		.string({ required_error: "Email is required" })
+		.email("This is not a valid email."),
 });
 
 export const signUpBusinessSchema = z.object({

@@ -10,26 +10,33 @@ import {
 } from "@react-email/components";
 
 interface EmailProps {
-	loginCode?: string;
+	token?: string;
 	to: string;
 	subject: string;
 	text: string;
+	link: string;
 }
 
 const baseUrl = process.env.NEXT_PUBLIC_WEBSITE_URL;
 
-export const EmailTemplate = ({ loginCode, text }: EmailProps) => (
+export const EmailTemplate = ({ token, text, link }: EmailProps) => (
 	<Html>
 		<Head />
-		<Preview>Log in with this magic link</Preview>
+		<Preview>Log in with this link</Preview>
 		<Body style={main}>
 			<Container style={container}>
 				<Heading style={h1}>Login</Heading>
-				{text}
+				<Link
+					target="_blank"
+					style={{ ...linkStyle, display: "block", marginBottom: "16px" }}
+					href={link}
+				>
+					{text}
+				</Link>
 				<Text style={{ ...codeText, marginBottom: "14px" }}>
 					Or, copy and paste this temporary login code:
 				</Text>
-				<code style={code}>{loginCode}</code>
+				<code style={code}>{token}</code>
 				<Text
 					style={{
 						...codeText,
@@ -51,7 +58,7 @@ export const EmailTemplate = ({ loginCode, text }: EmailProps) => (
 					<Link
 						href={baseUrl}
 						target="_blank"
-						style={{ ...link, color: "#898989" }}
+						style={{ ...linkStyle, color: "#898989" }}
 					>
 						AnimalsKingdom
 					</Link>
@@ -65,7 +72,7 @@ export const EmailTemplate = ({ loginCode, text }: EmailProps) => (
 );
 
 EmailTemplate.PreviewProps = {
-	loginCode: "sparo-ndigo-amurt-secan",
+	token: "sparo-ndigo-amurt-secan",
 } as EmailProps;
 
 export default EmailTemplate;
@@ -90,7 +97,7 @@ const h1 = {
 	padding: "0",
 };
 
-const link = {
+const linkStyle = {
 	color: "#2754C5",
 	fontFamily:
 		"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",

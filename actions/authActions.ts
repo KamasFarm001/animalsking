@@ -11,25 +11,30 @@ import apiConfig from "@/utils/axiosConfig";
 import { redirect } from "next/navigation";
 
 export const signInUser = async (formData: FormData) => {
-	const email = formData.get("email");
-	const safePassed = signInSchema.safeParse({ email });
+	const email = formData.get("email") as string;
+	const password = formData.get("password") as string;
+
+	const safePassed = signInSchema.safeParse({ email, password });
 	if (safePassed.error) {
 		return JSON.stringify({ success: false, data: safePassed.error.format() });
 	}
 
 	try {
-		const response = await apiConfig.post("/api/users/signIn", {
-			email,
+		const { data, error } = await authClient.signIn.email({
+			email: email!,
+			password: password!,
+			rememberMe: false,
 		});
 
-		if (response.status === 200) {
-			console.log(response.data);
-			return JSON.stringify({ success: true, data: response.data });
+		if (error?.message) {
+			return JSON.stringify({
+				success: false,
+				data: error,
+			});
 		}
-		console.log(response.data);
 		return JSON.stringify({
-			success: false,
-			data: response.data.message,
+			success: true,
+			data: `Welcome ${data?.user.name}`,
 		});
 	} catch (error: any) {
 		return JSON.stringify({ success: false, data: error });
@@ -82,10 +87,13 @@ export const signUpUser = async (formData: FormData) => {
 	});
 
 	if (error?.message) {
-		return JSON.stringify({ success: false, data: error.message });
 		console.log(error);
+		return JSON.stringify({ success: false, data: error.message });
 	}
-	return JSON.stringify({ success: true, data: "Welcome! sign up successful" });
+	return JSON.stringify({
+		success: true,
+		data: "Your account has been created",
+	});
 };
 
 export const signUpBusiness = async (formData: FormData) => {
@@ -127,9 +135,10 @@ export const signUpBusiness = async (formData: FormData) => {
 
 export const verifyBusinessOneTimeToken = async (formData: FormData) => {
 	const otp = formData.get("otp");
+	const email = formData.get("email");
 	const businessId = formData.get("businessId");
 
-	const safePassed = oneTimeTokenSchema.safeParse({ oneTimeToken: otp });
+	const safePassed = oneTimeTokenSchema.safeParse({ oneTimeToken: otp, email });
 
 	if (safePassed.error) {
 		return JSON.stringify({ success: false, data: safePassed.error.format() });
@@ -157,32 +166,27 @@ export const verifyBusinessOneTimeToken = async (formData: FormData) => {
 	}
 };
 export const verifyOneTimeToken = async (formData: FormData) => {
-	const otp = formData.get("otp");
-	const userId = formData.get("userId");
-
+	const otp = formData.get("otp") as string;
+	const email = formData.get("email") as string;
 	const safePassed = oneTimeTokenSchema.safeParse({ oneTimeToken: otp });
 
 	if (safePassed.error) {
 		return JSON.stringify({ success: false, data: safePassed.error.format() });
 	}
 	try {
-		const response = await apiConfig.post(
-			`/api/users/verify?userId=${userId}`,
-			{
-				otp,
-			}
-		);
-
-		if (response.status === 200) {
-			console.log(response.data);
-			return JSON.stringify({ success: true, data: response.data });
-		}
-		console.log(response.data);
-		return JSON.stringify({
-			success: false,
-			data: response.data.message,
-			email: response.data.email,
+		const { data, error } = await authClient.signIn.emailOtp({
+			email: email!,
+			otp: otp!,
 		});
+
+		if (error) {
+			return JSON.stringify({
+				success: false,
+				data: error,
+				email: email!,
+			});
+		}
+		return JSON.stringify({ success: true, data: "Verification success" });
 	} catch (error) {
 		return JSON.stringify({ success: false, data: error });
 	}

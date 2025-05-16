@@ -14,8 +14,10 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import apiConfig from "@/utils/axiosConfig";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FieldErrors } from "react-hook-form";
+import { authClient } from "@/lib/auth-client";
+import { emailSchema } from "@/lib/zodSchema";
 
 const RequestAnewCode = ({
 	email,
@@ -24,6 +26,7 @@ const RequestAnewCode = ({
 	idType,
 	resetError,
 	errors,
+	resetFields,
 }: {
 	email: string | null;
 	setCountDown: React.Dispatch<React.SetStateAction<number>>;
@@ -33,52 +36,51 @@ const RequestAnewCode = ({
 	errors: FieldErrors<{
 		oneTimeToken: string;
 	}>;
+	resetFields: () => void;
 }) => {
-	const searchParams = useSearchParams();
-	const searchParamsValue = idType === "businessId" ? "businessId" : "userId";
+	const router = useRouter();
 
 	const resendOtpCode = useMutation({
 		mutationKey: [],
 		mutationFn: async () => {
-			const response = apiConfig.get(
-				`/api/${
-					idType === "businessId" ? "business" : "users"
-				}/requestOtp?${idType}=${searchParams.get(searchParamsValue)}`
-			);
+			const response = await authClient.emailOtp.sendVerificationOtp({
+				email: email!,
+				type: "sign-in", // or "email-verification", "forget-password"
+			});
 			return response;
 		},
-		onSuccess(data: any) {
-			setCountDown(10);
-			if (data.status === 429) {
-				console.log(data);
-				setCountDown(data.data.remainingTime);
-				toast({
-					variant: "destructive",
-					title: data.data.message,
-					description: `${data.statusText}. Try again later`,
-				});
-			} else {
-				toast({
-					description: data.data.message,
-				});
-			}
+		onSuccess() {
+			setCountDown(20);
+			toast({
+				description: "Verification code has been sent",
+			});
 		},
 		onError(error: any) {
 			console.log(error);
 			toast({
 				variant: "destructive",
-				title: error.response.data.message,
-				description: "request a new verification code",
+				title: error.message,
+				description: "Something went wrong",
 			});
 		},
 	});
 
 	const handleResend = async () => {
+		const emailValidation = emailSchema.safeParse({ email });
+		if (emailValidation.error) {
+			toast({
+				variant: "destructive",
+				title: "Invalid email",
+				description: emailValidation.error.format().email?._errors[0],
+			});
+			router.push(`${process.env.NEXT_PUBLIC_WEBSITE_URL}/signup`);
+		}
 		try {
 			///resend code
 			if (errors.oneTimeToken) {
 				resetError();
 			}
+			resetFields();
 			resendOtpCode.mutate();
 		} catch (error) {
 			console.log(error);
@@ -111,7 +113,7 @@ const RequestAnewCode = ({
 						Email verification has been sent. If you have not received the
 						verification code after several attempts, please try the following:
 					</DialogDescription>
-					<DialogDescription>
+					<div>
 						<ul className="list-decimal list-inside font-normal">
 							<li>
 								Check if it is in your
@@ -128,7 +130,7 @@ const RequestAnewCode = ({
 								Try again after a few minutes
 							</li>
 						</ul>
-					</DialogDescription>
+					</div>
 				</DialogHeader>
 				<DialogClose
 					className="w-full rounded-sm active:scale-[1.01] text-center bg-primary hover:bg-primary/70 active:bg-primary/90 bg-brand-green/60 hover:bg-brand-green/70 ease transition-colors duration-100 p-2 font-medium mt-5 text-white "

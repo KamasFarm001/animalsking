@@ -2,7 +2,6 @@
 
 import { cn } from "@/utils/utils";
 import { Bell, Bookmark, Home, Lock, Store, User } from "lucide-react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "../ui/button";
@@ -11,7 +10,7 @@ import { useState } from "react";
 
 const SocialSidebarLeft = () => {
 	const pathname = usePathname();
-	const session = useSession();
+	// const session = useSession();
 	const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
 	return (
 		<>
@@ -48,7 +47,7 @@ const SocialSidebarLeft = () => {
 							<p className="hidden lg:flex text-lg">MarketPlace</p>
 						</Link>
 					</li>
-					{session.data?.user ? (
+					{/* {session.data?.user ? (
 						<>
 							<li
 								className={cn(
@@ -143,7 +142,7 @@ const SocialSidebarLeft = () => {
 								</div>
 							</li>
 						</>
-					)}
+					)} */}
 				</ul>
 			</aside>
 			<UnauthorizedModal

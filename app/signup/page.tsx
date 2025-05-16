@@ -1,7 +1,6 @@
 "use client";
 
 import SignUpImage from "@/public/signup-img.svg";
-
 import Image from "next/image";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/utils/utils";
 import { authClient } from "@/lib/auth-client";
+import { axiosInstance } from "@/lib/axios";
 
 export type signInDataType = z.infer<typeof signUpUserSchema>;
 
@@ -51,53 +51,73 @@ const Page = () => {
 	const searchParams = useSearchParams();
 	const userId = searchParams.get("userId") as string;
 
-	const handleGoogleLogin = () => {};
+	const handleGoogleLogin = async () => {
+		try {
+			const props = {
+				to: "kamasahdickson19@gmail.com",
+				subject: "Testing",
+				text: "Testing",
+				link: "dfd",
+				token: "1234",
+			};
+
+			const response = await axiosInstance.post("/api/send", {
+				...props,
+			});
+			console.log(response);
+		} catch (error) {
+			console.log(error);
+		}
+	};
 
 	const onSubmit = async (data: signInDataType) => {
-		// const formData = new FormData();
+		const formData = new FormData();
 
-		// Object.entries(data).forEach(([key, value]) => {
-		// 	if (key !== undefined && value !== undefined) {
-		// 		formData.append(key, value);
-		// 	}
-		// });
-		// formData.append("userId", userId);
-
-		const { error } = await authClient.signUp.email({
-			email: data.email,
-			password: data.password,
-			name: data.username,
-			country: data.country,
+		Object.entries(data).forEach(([key, value]) => {
+			if (key !== undefined && value !== undefined) {
+				formData.append(key, value);
+			}
 		});
+		formData.append("userId", userId);
 
-		if (error) {
-			console.log(error);
-			toast({
-				variant: "destructive",
-				title: error.message,
-				description: "An error occurred",
-			});
+		const rawState = (await signUpUser(formData)) as string;
+		const state = JSON.parse(rawState);
+
+		if (!state?.success) {
+			if (state.data == "INVALID_OTP") {
+				toast({
+					variant: "destructive",
+					title: state.data,
+					description: "invalid OTP",
+				});
+			} else {
+				toast({
+					variant: "destructive",
+					title: "something went wrong",
+					description: state.data,
+				});
+			}
 		}
 
-		// const rawState = (await signUpUser(formData)) as string;
-		// const state = JSON.parse(rawState);
+		if (state?.success) {
+			console.log(state);
+			const { error } = await authClient.emailOtp.sendVerificationOtp({
+				email: data.email,
+				type: "sign-in", // or "email-verification", "forget-password"
+			});
 
-		// if (!state?.success) {
-		// 	toast({
-		// 		variant: "destructive",
-		// 		title: state.error,
-		// 		description: "fix the error and try again.",
-		// 	});
-		// 	console.log(state);
-		// }
-
-		// if (state?.success) {
-		// 	console.log(state);
-		// 	toast({
-		// 		description: state?.data,
-		// 	});
-		// 	// router.push(`/signup/user-verification?email=${data.email}`);
-		// }
+			if (error?.message) {
+				toast({
+					variant: "default",
+					title: error.message,
+				});
+			}
+			toast({
+				variant: "default",
+				title: state?.data,
+			});
+			router.push(`/signup/user-verification?email=${data.email}`);
+		}
 	};
 
 	return (
@@ -153,6 +173,7 @@ const Page = () => {
 						render={({ field }) => (
 							<FormItem className="text-white">
 								<Select
+									disabled={form.formState.isSubmitting}
 									onValueChange={field.onChange}
 									defaultValue={field.value}
 									required
@@ -173,7 +194,7 @@ const Page = () => {
 						)}
 					/>
 
-					<div className="flex items-center gap-5">
+					<div className="flex gap-5">
 						<FormField
 							control={form.control}
 							name="email"

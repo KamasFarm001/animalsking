@@ -7,7 +7,6 @@ import apiConfig from "@/utils/axiosConfig";
 import { IFollowers } from "@/interface/social";
 import { toast as sonnerToast } from "sonner";
 import { toast } from "@/hooks/use-toast";
-import { useSession } from "next-auth/react";
 import { useState } from "react";
 import UnauthorizedModal from "../UnauthorizedModal";
 
@@ -27,7 +26,7 @@ const FollowButton = ({
 	});
 	const queryClient = useQueryClient();
 	const queryKey: QueryKey = ["followerInfo", userId, followUserId];
-	const session = useSession();
+	// const session = useSession();
 
 	const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
 
@@ -38,10 +37,10 @@ const FollowButton = ({
 						`/api/${userType}/${userId}/followers`,
 
 						{ params: { unfollowUserId: followUserId } }
-				  )
+					)
 				: await apiConfig.post(`/api/${userType}/${userId}/followers`, null, {
 						params: { followUserId },
-				  });
+					});
 
 			return response.data;
 		},
@@ -106,21 +105,21 @@ const FollowButton = ({
 	return (
 		<>
 			<Button
-				onClick={() => {
-					if (!session?.data?.user || !session) {
-						setShowUnauthorizedModal(true);
-					} else {
-						mutate();
-					}
-				}}
+				// onClick={() => {
+				// 	if (!session?.data?.user || !session) {
+				// 		setShowUnauthorizedModal(true);
+				// 	} else {
+				// 		mutate();
+				// 	}
+				// }}
 				variant={data.isFollowedByUser ? "outline" : "default"}
 				className="text-white"
 			>
 				{isLoading
 					? "Loading..."
 					: data.isFollowedByUser
-					? "Unfollow"
-					: "Follow"}
+						? "Unfollow"
+						: "Follow"}
 			</Button>
 			<UnauthorizedModal
 				showUnauthorizedModal={showUnauthorizedModal}
